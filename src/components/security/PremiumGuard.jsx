@@ -61,7 +61,7 @@ export default function PremiumGuard({ children, featureName = "Esta función", 
     };
 
     const openWhatsApp = () => {
-        const message = `Hola! Quiero adquirir una licencia Premium para Mister Cambio. Mi ID de instalación es: ${deviceId}`;
+        const message = `Hola! Quiero adquirir una licencia Premium para TasasAlDía. Mi ID de instalación es: ${deviceId}`;
         const url = `https://wa.me/584124051793?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
     };
@@ -75,38 +75,38 @@ export default function PremiumGuard({ children, featureName = "Esta función", 
 
     if (isShop) {
         title = <span>TasasAlDía <span className="text-amber-500">Business</span> 👑</span>;
-        message = "Gestiona productos y genera cotizaciones profesionales al instante.";
+        message = "Gestiona tu catálogo con precios bimoneda y comparte cotizaciones al instante.";
         Icon = Store;
-        iconColor = "text-indigo-600 dark:text-indigo-400 animate-pulse"; // Indigo para Shop
+        iconColor = "text-indigo-600 dark:text-indigo-400 animate-pulse";
         benefits = (
             <>
-                <BenefitItem icon={<MessageCircle size={15} className="text-green-500" />} text="Cotizaciones para WhatsApp." />
-                <BenefitItem icon={<Calculator size={15} className="text-amber-500" />} text="Cálculo Precio Efectivo (+5%)." />
-                <BenefitItem icon={<Database size={15} className="text-blue-500" />} text="Catálogo Offline (Sin Internet)." />
+                <BenefitItem icon={<Store size={15} className="text-indigo-500" />} text="Catálogo Bodega bimoneda (USD/Bs)" />
+                <BenefitItem icon={<MessageCircle size={15} className="text-green-500" />} text="Cotizaciones para WhatsApp" />
+                <BenefitItem icon={<Database size={15} className="text-blue-500" />} text="Almacenamiento offline en el dispositivo" />
             </>
         );
     } else if (isAI) {
         title = "Asesoría VIP Agotada ⚡";
-        message = "Para continuar con análisis precisos y visión ilimitada, activa tu licencia.";
+        message = "Para seguir con análisis precisos y conversiones ilimitadas, activa tu licencia.";
         Icon = Bot;
-        iconColor = "text-violet-600 dark:text-violet-400 animate-pulse"; // Violeta para AI
+        iconColor = "text-violet-600 dark:text-violet-400 animate-pulse";
         benefits = (
             <>
-                <BenefitItem icon={<Sparkles size={15} className="text-violet-600 dark:text-violet-400" />} text="Análisis de brecha real" />
-                <BenefitItem icon={<Star size={15} className="text-amber-500" />} text="Acceso a Catálogo VIP" />
-                <BenefitItem icon={<Check size={15} className="text-green-600 dark:text-green-500" />} text="Soporte Prioritario 24/7" />
+                <BenefitItem icon={<Calculator size={15} className="text-violet-600 dark:text-violet-400" />} text="Calculadora bimoneda ilimitada" />
+                <BenefitItem icon={<Star size={15} className="text-amber-500" />} text="Acceso a Catálogo Bodega" />
+                <BenefitItem icon={<Check size={15} className="text-green-600 dark:text-green-500" />} text="Soporte prioritario" />
             </>
         );
     } else {
-        title = <span>Mister Cambio <span className="text-amber-500">Premium</span> 👑</span>;
-        message = <span>Acceso exclusivo a <strong>{featureName}</strong> para miembros.</span>;
+        title = <span>TasasAlDía <span className="text-amber-500">Premium</span> 👑</span>;
+        message = <span>Acceso exclusivo a <strong>{featureName}</strong> para miembros Premium.</span>;
         Icon = Lock;
         iconColor = "text-amber-500";
         benefits = (
             <>
-                <BenefitItem icon={<Sparkles size={15} className="text-purple-600 dark:text-purple-400" />} text="Calculadora IA Ilimitada" />
-                <BenefitItem icon={<Star size={15} className="text-amber-500" />} text="Catálogo de Productos" />
-                <BenefitItem icon={<Check size={15} className="text-green-600 dark:text-green-500" />} text="Soporte Prioritario" />
+                <BenefitItem icon={<Store size={15} className="text-indigo-500" />} text="Catálogo Bodega con precios bimoneda" />
+                <BenefitItem icon={<MessageCircle size={15} className="text-green-500" />} text="Cotizaciones vía WhatsApp" />
+                <BenefitItem icon={<Calculator size={15} className="text-amber-500" />} text="Calculadora avanzada ilimitada" />
             </>
         );
     }
