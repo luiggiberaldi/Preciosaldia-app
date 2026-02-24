@@ -4,7 +4,7 @@ import { LayoutDashboard, Calculator, Wallet, Store, Download, Search, Key } fro
 
 import MonitorView from './views/MonitorView';
 import CalculatorView from './views/CalculatorView';
-import { ProductsView } from './views/ProductsView';
+import BodegaView from './views/BodegaView';
 import WalletView from './views/WalletView';
 import { TesterView } from './views/TesterView';
 
@@ -187,7 +187,7 @@ export default function App() {
 
         {activeTab === 'info' && (
           <PremiumGuard featureName="Catálogo & Tienda" isShop={true}>
-            <ProductsView rates={rates} triggerHaptic={triggerHaptic} />
+            <BodegaView rates={rates} triggerHaptic={triggerHaptic} />
           </PremiumGuard>
         )}
       </main>
