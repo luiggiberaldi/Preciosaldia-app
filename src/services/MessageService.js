@@ -60,8 +60,14 @@ export const MessageService = {
             if (showReference) amountStr += ` (Ref: ${strUsd} $)`;
         } else {
             // Foreign Currency Display
-            const symbol = mainCurrency === 'EUR' ? 'EUR' : 'USDT'; // Default to USDT for foreign
-            const valToShow = mainCurrency === 'EUR' ? strEur : strUsd;
+            let symbol, valToShow;
+            if (mainCurrency === 'EUR') {
+                symbol = 'EUR'; valToShow = strEur;
+            } else if (mainCurrency === 'USD_BCV') {
+                symbol = '$'; valToShow = strUsd;
+            } else {
+                symbol = 'USDT'; valToShow = strUsd;
+            }
 
             amountStr = `*${valToShow} ${symbol}*`;
 

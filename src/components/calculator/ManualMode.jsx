@@ -209,6 +209,7 @@ export const ManualMode = ({ rates, accounts, theme, triggerHaptic, isKeyboardOp
                             >
                                 <option value="auto">Automático</option>
                                 <option value="BS">Bolívares (Bs)</option>
+                                <option value="USD_BCV">Dólares BCV ($)</option>
                                 <option value="USDT">USDT</option>
                                 <option value="EUR">Euros (€)</option>
                             </select>
