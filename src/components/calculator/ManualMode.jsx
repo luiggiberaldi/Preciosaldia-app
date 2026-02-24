@@ -74,7 +74,7 @@ export const ManualMode = ({ rates, accounts, theme, triggerHaptic, isKeyboardOp
 
     return (
         // CONTENEDOR PRINCIPAL: Usa flex-col para separar scroll de botones fijos
-        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950/50">
+        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950/50 max-w-xl mx-auto w-full">
 
             {/* ÁREA SCROLLABLE (Inputs y Título) */}
             <div className={`flex-1 overflow-y-auto ${isKeyboardOpen ? 'p-2' : 'p-4 sm:p-6'} scrollbar-hide`}>

@@ -1,13 +1,18 @@
-import React, { useState, useRef } from 'react';
-import { RefreshCw, TrendingUp, TrendingDown, WifiOff, Clock, Bell, BellRing, Maximize, Minimize, Camera, Loader2, AlertTriangle, Sun, Moon } from 'lucide-react';
+import React, { useState, useRef, useMemo } from 'react';
+import { RefreshCw, TrendingUp, TrendingDown, WifiOff, Clock, Bell, BellRing, Maximize, Minimize, Camera, Loader2, AlertTriangle, Sun, Moon, BarChart3, BellDot } from 'lucide-react';
 // ✅ Asegúrate de tener instalado: npm i html2canvas
 import html2canvas from 'html2canvas';
+import Sparkline from '../components/Sparkline';
+import HistoryPanel from '../components/HistoryPanel';
+import AlertsConfig from '../components/AlertsConfig';
 
-export default function MonitorView({ rates, loading, isOffline, onRefresh, toggleTheme, theme, copyLogs, enableNotifications, notificationsEnabled, addLog, triggerHaptic }) {
+export default function MonitorView({ rates, loading, isOffline, onRefresh, toggleTheme, theme, copyLogs, enableNotifications, notificationsEnabled, addLog, triggerHaptic, rateHistory, alerts }) {
 
     const [secretCount, setSecretCount] = useState(0);
     const [kioskMode, setKioskMode] = useState(false);
     const [isCapturing, setIsCapturing] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
+    const [showAlerts, setShowAlerts] = useState(false);
 
     // Referencia al contenedor del Kiosco (para la foto)
     const kioskRef = useRef(null);
@@ -190,7 +195,7 @@ export default function MonitorView({ rates, loading, isOffline, onRefresh, togg
 
     // --- VISTA NORMAL (GRID PRINCIPAL) ---
     return (
-        <div className="flex flex-col h-[calc(100dvh-150px)] overflow-hidden justify-between py-2 animate-in fade-in slide-in-from-bottom-2 duration-500 relative">
+        <div className="flex flex-col h-[calc(100dvh-150px)] overflow-hidden justify-between py-2 animate-in fade-in slide-in-from-bottom-2 duration-500 relative max-w-xl mx-auto w-full">
 
             {/* HEADER */}
             <header className="flex items-center justify-between pt-2 pb-2 px-3 sm:px-4 shrink-0">
@@ -200,7 +205,7 @@ export default function MonitorView({ rates, loading, isOffline, onRefresh, togg
                     </button>
                     <div className="flex items-center gap-2 ml-1 mt-0.5">
                         <div className="bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded-md border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm pointer-events-none">
-                            <p className="text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] leading-none">V3.0 FÉNIX</p>
+                            <p className="text-[8px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em] leading-none">V4.0</p>
                         </div>
                         <button
                             onClick={() => { triggerHaptic && triggerHaptic(); toggleTheme(); }}
@@ -211,21 +216,45 @@ export default function MonitorView({ rates, loading, isOffline, onRefresh, togg
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                    {/* BOTÓN MODO KIOSCO (Visible en Móvil y PC) */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                    {/* KIOSCO — solo visible en sm+ */}
                     <button
                         onClick={() => { triggerHaptic && triggerHaptic(); setKioskMode(true); }}
-                        className="p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-brand-dark dark:hover:text-brand transition-all shadow-sm active:scale-95"
+                        className="hidden sm:flex p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-brand-dark dark:hover:text-brand transition-all shadow-sm active:scale-95"
                         title="Pantalla Completa / Captura"
                     >
                         <Maximize size={18} strokeWidth={2} />
                     </button>
 
-                    <button onClick={() => { triggerHaptic && triggerHaptic(); enableNotifications(); }} disabled={notificationsEnabled} className={`p-2 sm:p-2.5 rounded-2xl border transition-all active:scale-95 shadow-sm ${notificationsEnabled ? 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400'}`}>
-                        {notificationsEnabled ? <BellRing size={18} /> : <Bell size={18} />}
+                    {/* NOTIFICACIONES PUSH — solo visible en sm+ */}
+                    <button onClick={() => { triggerHaptic && triggerHaptic(); enableNotifications(); }} disabled={notificationsEnabled} className={`hidden sm:flex p-2 sm:p-2.5 rounded-2xl border transition-all active:scale-95 shadow-sm ${notificationsEnabled ? 'bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 dark:text-slate-400'}`}>
+                        {notificationsEnabled ? <BellRing size={16} /> : <Bell size={16} />}
                     </button>
+
+                    {/* v4.0: Alertas — siempre visible */}
+                    <button
+                        onClick={() => { triggerHaptic && triggerHaptic(); setShowAlerts(true); }}
+                        className="p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-amber-500 transition-all shadow-sm active:scale-95 relative"
+                        title="Alertas de Tasa"
+                    >
+                        <BellDot size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        {alerts?.alerts?.length > 0 && (
+                            <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-amber-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse" />
+                        )}
+                    </button>
+
+                    {/* v4.0: Historial — siempre visible */}
+                    <button
+                        onClick={() => { triggerHaptic && triggerHaptic(); setShowHistory(true); }}
+                        className="p-2 sm:p-2.5 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-blue-500 transition-all shadow-sm active:scale-95"
+                        title="Historial de Tasas"
+                    >
+                        <BarChart3 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    </button>
+
+                    {/* REFRESH — siempre visible */}
                     <button onClick={() => { triggerHaptic && triggerHaptic(); onRefresh(); }} disabled={loading} className={`p-2 sm:p-2.5 rounded-2xl text-slate-900 shadow-lg shadow-brand/10 border border-transparent transition-all active:scale-95 ${loading ? 'bg-slate-100 dark:bg-slate-800 text-slate-300 cursor-not-allowed' : 'bg-brand hover:bg-brand-light'}`}>
-                        <RefreshCw size={18} className={loading ? 'animate-spin' : ''} strokeWidth={2.5} />
+                        <RefreshCw size={16} className={`sm:w-[18px] sm:h-[18px] ${loading ? 'animate-spin' : ''}`} strokeWidth={2.5} />
                     </button>
                 </div>
             </header>
@@ -269,6 +298,13 @@ export default function MonitorView({ rates, loading, isOffline, onRefresh, togg
                         </div>
 
                         <div className="flex items-center gap-3 pt-4 border-t border-slate-50 dark:border-slate-800">
+                            {/* v4.0: Sparkline */}
+                            {rateHistory && (() => {
+                                const sparkData = rateHistory.getSparklineData('usdt', 1);
+                                return sparkData.length >= 2 ? (
+                                    <Sparkline data={sparkData} width={80} height={24} color="#22c55e" />
+                                ) : null;
+                            })()}
                             <div className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${spread > 10 ? 'bg-rose-50 text-rose-600 dark:bg-rose-900/20' : 'bg-slate-100 text-slate-500 dark:bg-slate-800'}`}>
                                 Brecha: {spread.toFixed(2)}%
                             </div>
@@ -279,8 +315,10 @@ export default function MonitorView({ rates, loading, isOffline, onRefresh, togg
 
                 {/* Tarjetas Secundarias (BCV / Euro) */}
                 <div className="grid grid-cols-2 gap-4 shrink-0">
-                    <RateCardMini title="Dolar BCV Oficial" price={rates.bcv.price} change={rates.bcv.change} icon="🏛️" formatVES={formatExactRate} renderChange={renderChange} symbol="Bs / $" />
-                    <RateCardMini title="Euro BCV Oficial" price={rates.euro.price} change={rates.euro.change} icon="🇪🇺" formatVES={formatExactRate} renderChange={renderChange} symbol="Bs / €" />
+                    <RateCardMini title="Dolar BCV Oficial" price={rates.bcv.price} change={rates.bcv.change} icon="🏛️" formatVES={formatExactRate} renderChange={renderChange} symbol="Bs / $"
+                        sparkData={rateHistory?.getSparklineData('bcv', 1)} sparkColor="#3b82f6" />
+                    <RateCardMini title="Euro BCV Oficial" price={rates.euro.price} change={rates.euro.change} icon="🇪🇺" formatVES={formatExactRate} renderChange={renderChange} symbol="Bs / €"
+                        sparkData={rateHistory?.getSparklineData('euro', 1)} sparkColor="#a855f7" />
                 </div>
             </div>
 
@@ -293,12 +331,33 @@ export default function MonitorView({ rates, loading, isOffline, onRefresh, togg
                     </span>
                 </div>
             </div>
+            {/* v4.0: History & Alerts Modals */}
+            {rateHistory && (
+                <HistoryPanel
+                    isOpen={showHistory}
+                    onClose={() => setShowHistory(false)}
+                    getHistory={rateHistory.getHistory}
+                    getStats={rateHistory.getStats}
+                />
+            )}
+            {alerts && (
+                <AlertsConfig
+                    isOpen={showAlerts}
+                    onClose={() => setShowAlerts(false)}
+                    alerts={alerts.alerts}
+                    triggeredLog={alerts.triggeredLog}
+                    addAlert={alerts.addAlert}
+                    removeAlert={alerts.removeAlert}
+                    toggleAlert={alerts.toggleAlert}
+                    currentRates={rates}
+                />
+            )}
         </div>
     );
 }
 
 // Componente pequeño para tarjetas secundarias
-function RateCardMini({ title, price, change, icon, formatVES, renderChange, symbol }) {
+function RateCardMini({ title, price, change, icon, formatVES, renderChange, symbol, sparkData, sparkColor }) {
     return (
         <div className="bg-white dark:bg-slate-900 p-5 rounded-[1.5rem] border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 duration-300">
             <div className="flex justify-between items-start mb-4">
@@ -307,7 +366,12 @@ function RateCardMini({ title, price, change, icon, formatVES, renderChange, sym
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">{title}</span>
             <div className="text-xl font-black text-slate-800 dark:text-white tracking-tight font-mono">{formatVES(price)}</div>
-            <div className="text-[10px] text-slate-400 font-medium">{symbol || 'Bs / $'}</div>
+            <div className="flex items-center justify-between mt-1">
+                <span className="text-[10px] text-slate-400 font-medium">{symbol || 'Bs / $'}</span>
+                {sparkData && sparkData.length >= 2 && (
+                    <Sparkline data={sparkData} width={50} height={16} color={sparkColor || '#3b82f6'} showArea={false} />
+                )}
+            </div>
         </div>
     );
 }

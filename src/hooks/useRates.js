@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRateHistory } from './useRateHistory';
+import { useAlerts } from './useAlerts';
 
 const DEFAULT_RATES = {
     usdt: { price: 37.10, source: 'Promedio P2P', type: 'p2p', change: 0.12 },
@@ -38,6 +40,10 @@ export function useRates() {
     const [isOffline, setIsOffline] = useState(false);
     const [logs, setLogs] = useState([]);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+    // v4.0: Rate History & Alerts
+    const rateHistory = useRateHistory();
+    const alertsSystem = useAlerts();
 
     // [PERFORMANCE] useRef impides re-renders inside updateData dependencies
     const ratesRef = useRef(rates);
@@ -256,15 +262,17 @@ export function useRates() {
             // but for notifications usually we compare 'rates' state vs 'newRates'. 
             // Since we are inside updateData, ratesRef.current holds the state from before this update cycle.
             if (notificationsEnabled) {
-                const oldBcv = ratesRef.current?.bcv?.price || 0;
-                const currentBcv = newRates.bcv.price;
+                const round2 = (v) => Math.round(v * 100) / 100;
+
+                const oldBcv = round2(ratesRef.current?.bcv?.price || 0);
+                const currentBcv = round2(newRates.bcv.price);
                 if (currentBcv > 0 && oldBcv > 0 && currentBcv !== oldBcv) {
                     const emoji = currentBcv > oldBcv ? "📈" : "📉";
                     sendRateNotification(`${emoji} Cambio Tasa BCV`, `La tasa oficial cambió a ${currentBcv.toFixed(2)} Bs.`);
                 }
 
-                const oldEuro = ratesRef.current?.euro?.price || 0;
-                const currentEuro = newRates.euro.price;
+                const oldEuro = round2(ratesRef.current?.euro?.price || 0);
+                const currentEuro = round2(newRates.euro.price);
                 if (currentEuro > 0 && oldEuro > 0 && currentEuro !== oldEuro) {
                     const emoji = currentEuro > oldEuro ? "📈" : "📉";
                     sendRateNotification(`${emoji} Cambio Tasa EURO`, `La tasa oficial del Euro cambió a ${currentEuro.toFixed(2)} Bs.`);
@@ -273,6 +281,11 @@ export function useRates() {
 
             newRates.lastUpdate = new Date();
             setRates(newRates);
+
+            // v4.0: Record history snapshot & check alerts
+            rateHistory.addSnapshot(newRates);
+            alertsSystem.checkAlerts(newRates);
+
             if (!isAutoUpdate) addLog("Actualización completada", 'success');
 
         } catch (e) {
@@ -293,5 +306,11 @@ export function useRates() {
     }, [updateData]);
 
     const currentRates = rates || DEFAULT_RATES;
-    return { rates: currentRates, loading, isOffline, logs, updateData, enableNotifications, notificationsEnabled };
+    return {
+        rates: currentRates, loading, isOffline, logs, updateData,
+        enableNotifications, notificationsEnabled,
+        // v4.0
+        rateHistory,
+        alerts: alertsSystem,
+    };
 }

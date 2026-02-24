@@ -63,7 +63,7 @@ export default function CalculatorInput({ label, amount, currency, currencies, o
             onFocus={onFocus}
             onBlur={onBlur}
             placeholder="0"
-            className={`w-full bg-transparent text-right font-black text-slate-800 dark:text-white outline-none placeholder-slate-200 dark:placeholder-slate-700 tracking-tighter transition-all pl-2 pr-2 py-2 leading-relaxed ${getFontSize(amount)}`}
+            className={`w-full bg-transparent text-right font-black text-slate-800 dark:text-white outline-none placeholder-slate-200 dark:placeholder-slate-700 tracking-tighter transition-all pl-2 pr-8 py-2 leading-relaxed ${getFontSize(amount)}`}
           />
         </div>
 

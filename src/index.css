@@ -42,7 +42,7 @@ input[type=number] {
 }
 
 /* --- LANDSCAPE BLOCKER --- */
-@media (orientation: landscape) and (max-width: 1024px) {
+@media (orientation: landscape) and (max-height: 500px) {
   #root {
     display: none;
   }

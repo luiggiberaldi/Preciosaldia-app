@@ -26,7 +26,7 @@ export default function App() {
   const [clientDeviceId, setClientDeviceId] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
 
-  const { rates, loading, isOffline, logs, updateData, notificationsEnabled, enableNotifications } = useRates();
+  const { rates, loading, isOffline, logs, updateData, notificationsEnabled, enableNotifications, rateHistory, alerts } = useRates();
   const { generateCodeForClient } = useSecurity();
 
   useEffect(() => {
@@ -138,6 +138,8 @@ export default function App() {
     isKeyboardOpen, // Pass down
     // Monitor Props
     loading, isOffline, onRefresh: updateData, lastLog: logs[logs.length - 1], notificationsEnabled, enableNotifications,
+    // v4.0 Props
+    rateHistory, alerts,
     // Products Props
     // (Nada extra por ahora, solo rates y haptic)
   };
@@ -156,7 +158,7 @@ export default function App() {
       )}
 
       {/* Viewport: Flex-1 para ocupar el espacio restante automáticamente */}
-      <main className={`flex-1 w-full max-w-md md:max-w-3xl lg:max-w-7xl mx-auto p-3 sm:p-6 relative pb-36 scrollbar-hide flex flex-col ${activeTab === 'monitor' || activeTab === 'calc' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+      <main className={`flex-1 w-full max-w-md md:max-w-lg lg:max-w-3xl xl:max-w-5xl mx-auto p-3 sm:p-6 relative pb-36 scrollbar-hide flex flex-col ${activeTab === 'monitor' || activeTab === 'calc' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
 
         {/* Hidden Admin Trigger Area (Top Left, invisible) */}
         <div
@@ -194,7 +196,7 @@ export default function App() {
 
       {/* Navegación Inferior (Hidden when keyboard is open) */}
       {!isKeyboardOpen && (
-        <div className="fixed bottom-0 left-0 right-0 px-6 pb-[env(safe-area-inset-bottom)] pt-0 mb-6 max-w-md mx-auto z-30 pointer-events-none animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-0 left-0 right-0 px-6 pb-[env(safe-area-inset-bottom)] pt-0 mb-6 max-w-md md:max-w-lg lg:max-w-xl mx-auto z-30 pointer-events-none animate-in slide-in-from-bottom-4 duration-300">
           <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl rounded-3xl p-1.5 flex justify-between items-center shadow-2xl shadow-slate-900/30 border border-white/10 ring-1 ring-black/5 pointer-events-auto">
             <TabButton icon={<LayoutDashboard size={20} strokeWidth={activeTab === 'monitor' ? 3 : 2} />} label="Inicio" isActive={activeTab === 'monitor'} onClick={() => { triggerHaptic(); setActiveTab('monitor'); }} />
             <TabButton icon={<Calculator size={20} strokeWidth={activeTab === 'calc' ? 3 : 2} />} label="Calc" isActive={activeTab === 'calc'} onClick={() => { triggerHaptic(); setActiveTab('calc'); }} />
