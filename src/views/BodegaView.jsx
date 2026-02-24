@@ -279,16 +279,16 @@ export default function BodegaView({ rates, triggerHaptic }) {
     // ═══════════════════════════════════════════════════════════════
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 p-3 sm:p-5 overflow-hidden">
+        <div className="flex flex-col h-full bg-slate-50 dark:bg-slate-950 p-3 sm:p-5 lg:p-8 overflow-hidden max-w-7xl mx-auto w-full">
 
             {/* ──── HEADER ──── */}
             <div className="shrink-0 mb-4 space-y-3">
                 <div className="flex justify-between items-center">
                     <div>
-                        <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
+                        <h2 className="text-2xl lg:text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
                             <Store size={24} className="text-brand" /> Mi Bodega
                         </h2>
-                        <p className="text-xs text-slate-400 font-medium ml-1">Catálogo de precios bimoneda</p>
+                        <p className="text-xs lg:text-sm text-slate-400 font-medium ml-1">Catálogo de precios bimoneda</p>
                     </div>
                     <div className="flex gap-2">
                         <button
@@ -432,7 +432,7 @@ export default function BodegaView({ rates, triggerHaptic }) {
                 </div>
             ) : (
                 <>
-                    <div className="flex-1 overflow-y-auto pb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 scrollbar-hide content-start items-start">
+                    <div className="flex-1 overflow-y-auto pb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5 md:gap-3 lg:gap-4 scrollbar-hide content-start items-start">
                         {paginatedProducts.map(p => {
                             const { costPerUnit, sellUsd, sellBs, sellBoxUsd, sellBoxBs } = calcPrices(p);
                             return (
@@ -466,8 +466,8 @@ export default function BodegaView({ rates, triggerHaptic }) {
                                     </div>
 
                                     {/* Info */}
-                                    <div className="p-2.5 space-y-1.5">
-                                        <h3 className="font-bold text-xs text-slate-800 dark:text-white leading-tight line-clamp-2 min-h-[2rem]">{p.name}</h3>
+                                    <div className="p-2.5 md:p-3 space-y-1.5">
+                                        <h3 className="font-bold text-xs md:text-sm text-slate-800 dark:text-white leading-tight line-clamp-2 min-h-[2rem]">{p.name}</h3>
 
                                         {/* Precio */}
                                         <div className="space-y-1">
@@ -521,10 +521,10 @@ export default function BodegaView({ rates, triggerHaptic }) {
                MODAL: AGREGAR / EDITAR
             ═══════════════════════════════════════════════════════════ */}
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingId ? "Editar Producto" : "Nuevo Producto"}>
-                <div className="space-y-4">
+                <div className="space-y-4 md:space-y-5">
 
                     {/* Foto */}
-                    <div onClick={() => fileInputRef.current.click()} className="h-28 bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative overflow-hidden">
+                    <div onClick={() => fileInputRef.current.click()} className="h-28 md:h-36 bg-slate-50 dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-brand transition-colors relative overflow-hidden">
                         {image ? <img src={image} className="w-full h-full object-cover" /> : (
                             <>
                                 <Camera size={22} className="text-slate-400 mb-1" />
