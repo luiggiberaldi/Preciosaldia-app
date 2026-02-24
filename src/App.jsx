@@ -69,15 +69,18 @@ export default function App() {
   };
 
   // ADMIN PANEL LOGIC (Hidden)
+  // [AUDIT FIX] Replaced window.lastClickTime with ref
+  const lastClickTimeRef = useRef(0);
+
   const handleLogoClick = () => {
     const now = Date.now();
     // Reset clicks if too slow (more than 1s between clicks)
-    if (window.lastClickTime && (now - window.lastClickTime > 1000)) {
+    if (lastClickTimeRef.current && (now - lastClickTimeRef.current > 1000)) {
       setAdminClicks(1);
     } else {
       setAdminClicks(prev => prev + 1);
     }
-    window.lastClickTime = now;
+    lastClickTimeRef.current = now;
 
     if (adminClicks + 1 >= 10) {
       setShowAdminPanel(true);

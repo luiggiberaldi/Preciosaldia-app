@@ -12,7 +12,6 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false); // [NEW] backup state
 
     // MARKET LOGIC (PDA v1.0) - REPOSITION PARITY
-    // MARKET LOGIC (PDA v1.0) - REPOSITION PARITY
     const [streetRate, setStreetRate] = useState(() => {
         const saved = localStorage.getItem('street_rate_bs');
         return saved ? parseFloat(saved) : 0;
@@ -36,7 +35,6 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
     });
     const [isConfigOpen, setIsConfigOpen] = useState(false); // Unified Toggle
 
-    // EFFECTIVE RATE (The heart of the feature)
     // EFFECTIVE RATE (The heart of the feature)
     const effectiveUsdtRate = useAutoUsdt ? rates.usdt.price : (parseFloat(customUsdtPrice) > 0 ? parseFloat(customUsdtPrice) : rates.usdt.price);
 
@@ -210,7 +208,6 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
         setPriceUsdt(val);
         if (!val || parseFloat(val) <= 0 || streetRate <= 0) { setPriceEfectivo(''); return; }
 
-        // USDT -> Efectivo (Parity Logic)
         // USDT -> Efectivo (Parity Logic)
         // USDT * USDT_Rate = TotalBs -> TotalBs / StreetRate = Efectivo
         const totalBs = parseFloat(val) * effectiveUsdtRate; // [UPDATED] Use effective rate
@@ -629,15 +626,7 @@ export const ProductsView = ({ rates, triggerHaptic }) => {
                 </div>
             </Modal>
 
-            {/* Share Modal */}
-            <ProductShareModal
-                isOpen={!!shareProduct}
-                onClose={() => setShareProduct(null)}
-                product={shareProduct}
-                accounts={accounts}
-                streetRate={streetRate}
-                rates={{ ...rates, usdt: { ...rates.usdt, price: effectiveUsdtRate } }}
-            />
+
 
             {/* Settings Modal (Fixed) */}
             <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />

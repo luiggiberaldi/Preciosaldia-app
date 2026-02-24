@@ -5,7 +5,6 @@ import { formatBs, formatUsd } from '../utils/calculatorUtils';
  */
 export const MessageService = {
     /**
-    /**
      * Builds the payment message string.
      * @param {object} params
      * @param {number|string} params.amountTop

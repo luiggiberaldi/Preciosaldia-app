@@ -7,11 +7,20 @@ const DEFAULT_RATES = {
     lastUpdate: new Date().toISOString()
 };
 
-const EXCHANGERATE_KEY = 'F1a3af26247a97a33ee5ad90';
+const EXCHANGERATE_KEY = import.meta.env.VITE_EXCHANGERATE_KEY || '';
 const DEFAULT_EUR_USD_RATIO = 1.18;
 const UPDATE_INTERVAL = 30000;
 
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxT9sKz_XWRWuQx_XP-BJ33T0hoAgJsLwhZA00v6nPt4Ij4jRjq-90mDGLVCsS6FXwW9Q/exec?token=Lvbp1994';
+const GOOGLE_SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL || '';
+
+// [AUDIT FIX] Extraída como función reutilizable (antes duplicada en 2 bloques)
+const alignMagnitude = (val, anchor) => {
+    if (!val || val <= 0 || !anchor || anchor <= 0) return val;
+    let corrected = val;
+    while (corrected < (anchor * 0.20)) corrected *= 10;
+    while (corrected > (anchor * 5.0)) corrected /= 10;
+    return corrected;
+};
 
 const CONNECTION_STRATEGIES = [
     { name: 'Directo', buildUrl: (target) => target },
@@ -201,13 +210,7 @@ export function useRates() {
                 let apiBcvChange = typeof rawBcv === 'object' ? rawBcv.change : null;
                 let apiEuroChange = typeof rawEuro === 'object' ? rawEuro.change : null;
 
-                const alignMagnitude = (val, anchor) => {
-                    if (!val || val <= 0 || !anchor || anchor <= 0) return val;
-                    let corrected = val;
-                    while (corrected < (anchor * 0.20)) corrected *= 10;
-                    while (corrected > (anchor * 5.0)) corrected /= 10;
-                    return corrected;
-                };
+                // [AUDIT FIX] alignMagnitude ahora es top-level
 
                 if (newRates.usdt.price > 0) {
                     newBcvPrice = alignMagnitude(bcvP, newRates.usdt.price);
@@ -233,12 +236,7 @@ export function useRates() {
                 if (oficial?.promedio > 0) {
                     let bcvP = parseSafeFloat(oficial.promedio);
                     if (newRates.usdt.price > 0) {
-                        const alignMagnitude = (val, anchor) => {
-                            let corrected = val;
-                            while (corrected < (anchor * 0.20)) corrected *= 10;
-                            while (corrected > (anchor * 5.0)) corrected /= 10;
-                            return corrected;
-                        };
+                        // [AUDIT FIX] alignMagnitude ahora es top-level
                         bcvP = alignMagnitude(bcvP, newRates.usdt.price);
                     }
                     newBcvPrice = bcvP;

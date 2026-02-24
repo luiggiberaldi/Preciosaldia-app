@@ -3,14 +3,16 @@ import OneSignal from 'react-onesignal';
 export default async function runOneSignal() {
 
 
+  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID;
+  if (!appId) return; // [AUDIT FIX] Skip si no hay key
+
   try {
     await OneSignal.init({
-      appId: "c3c60e6d-0479-489a-9f05-f6bdf915c166",
+      appId,
       allowLocalhostAsSecureOrigin: true,
-      language: 'es', // Forzar español
+      language: 'es',
       notifyButton: {
         enable: true,
-        // Textos cortos y específicos para BCV
         text: {
           'tip.state.unsubscribed': 'Activar alertas BCV',
           'tip.state.subscribed': 'Alertas BCV activas',
@@ -29,14 +31,10 @@ export default async function runOneSignal() {
       serviceWorkerPath: 'OneSignalSDKWorker.js',
       serviceWorkerParam: { scope: '/' }
     });
-    console.log("✅ OneSignal Inicializado (Modo BCV)");
   } catch (err) {
-
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (isLocalhost) {
-      console.warn("⚠️ OneSignal deshabilitado en local (Restricción de dominio)");
-    } else {
-      console.error("❌ Error al iniciar OneSignal", err);
+    // Silencioso en localhost, error en producción
+    if (!(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      console.error("Error al iniciar OneSignal", err);
     }
   }
 }

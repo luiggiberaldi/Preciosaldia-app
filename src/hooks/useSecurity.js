@@ -82,7 +82,9 @@ export function useSecurity() {
 
                         // [NEW] Mensaje de Expiración (Solo si acabamos de detectar que expiró)
                         if (isPremium) { // Evitar spam si ya estaba expirado
-                            alert("⏳ Tu periodo de demostración de 24 horas ha finalizado.\n\nEsperamos que hayas disfrutado la experiencia VIP. Para continuar operando sin límites y blindar tu negocio, adquiere tu licencia oficial hoy mismo.");
+                            // [AUDIT FIX] Demo expirado, limpiar silenciosamente
+                            // El PremiumGuard se encargará de mostrar la UI de paywall
+                            localStorage.removeItem('premium_token');
                         }
 
                         localStorage.removeItem('premium_token');

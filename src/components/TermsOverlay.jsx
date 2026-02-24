@@ -31,7 +31,7 @@ export default function TermsOverlay() {
 
     return (
         <div className="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-300">
-            <div className="w-full max-w-2xl bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-500">
+            <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-500">
 
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-slate-200 bg-slate-50 flex items-center gap-3">
@@ -163,8 +163,8 @@ export default function TermsOverlay() {
                         onClick={handleAccept}
                         disabled={!canAccept}
                         className={`w-full py-4 rounded-xl font-bold text-sm transition-all shadow-lg flex items-center justify-center gap-2 ${canAccept
-                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20 active:scale-95'
-                                : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20 active:scale-95'
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                             }`}
                     >
                         <Check size={20} strokeWidth={2.5} />
