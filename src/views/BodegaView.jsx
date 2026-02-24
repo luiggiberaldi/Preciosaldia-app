@@ -444,35 +444,23 @@ export default function BodegaView({ rates, triggerHaptic }) {
                                     <div className="p-2.5 space-y-1.5">
                                         <h3 className="font-bold text-xs text-slate-800 dark:text-white leading-tight line-clamp-2 min-h-[2rem]">{p.name}</h3>
 
-                                        {/* Precio Unitario USD */}
-                                        <div className="flex items-baseline gap-1">
-                                            <span className="text-base font-black text-brand-dark dark:text-brand">${fmtUsd(sellUsd)}</span>
-                                        </div>
-
-                                        {/* Precio Bs */}
-                                        <div className="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-800/30">
-                                            <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">{fmtBs(sellBs)} Bs</span>
-                                        </div>
-
-                                        {/* Detalles caja */}
-                                        {p.unitsPerBox > 1 && (
-                                            <div className="text-[10px] text-slate-400 space-y-0.5 pt-0.5">
-                                                <div className="flex justify-between">
-                                                    <span>Caja ({p.unitsPerBox} uds):</span>
-                                                    <span className="font-bold text-slate-500">${fmtUsd(p.costBox)}</span>
-                                                </div>
-                                                <div className="flex justify-between">
-                                                    <span>Costo/ud:</span>
-                                                    <span className="font-mono text-slate-500">${fmtUsd(costPerUnit)}</span>
-                                                </div>
+                                        {/* Precio Unitario */}
+                                        <div className="space-y-1">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Unidad</p>
+                                            <div className="flex items-baseline justify-between">
+                                                <span className="text-base font-black text-brand-dark dark:text-brand">${fmtUsd(sellUsd)}</span>
+                                                <span className="text-xs font-black text-emerald-700 dark:text-emerald-400">{fmtBs(sellBs)} Bs</span>
                                             </div>
-                                        )}
+                                        </div>
 
-                                        {/* Margen badge */}
-                                        {p.marginPercent > 0 && (
-                                            <div className="flex items-center gap-1 text-[10px] text-slate-400">
-                                                <Percent size={10} />
-                                                <span>Margen: <strong className="text-slate-500">{p.marginPercent}%</strong></span>
+                                        {/* Precio por Caja (solo si tiene más de 1 unidad) */}
+                                        {p.unitsPerBox > 1 && (
+                                            <div className="bg-slate-50 dark:bg-slate-800/50 px-2 py-1.5 rounded-lg space-y-0.5 border border-slate-100 dark:border-slate-700/50">
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Caja × {p.unitsPerBox}</p>
+                                                <div className="flex items-baseline justify-between">
+                                                    <span className="text-sm font-black text-brand-dark dark:text-brand">${fmtUsd(sellUsd * p.unitsPerBox)}</span>
+                                                    <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">{fmtBs(sellBs * p.unitsPerBox)} Bs</span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -551,8 +539,8 @@ export default function BodegaView({ rates, triggerHaptic }) {
                                     type="button"
                                     onClick={() => { triggerHaptic?.(); setCostCurrency(c => c === 'usd' ? 'bs' : 'usd'); }}
                                     className={`absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-black transition-colors ${costCurrency === 'usd'
-                                            ? 'bg-brand/20 text-brand-dark dark:text-brand'
-                                            : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                        ? 'bg-brand/20 text-brand-dark dark:text-brand'
+                                        : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                                         }`}
                                 >
                                     {costCurrency === 'usd' ? 'USD' : 'Bs'}
@@ -626,8 +614,8 @@ export default function BodegaView({ rates, triggerHaptic }) {
                                         type="button"
                                         onClick={() => { triggerHaptic?.(); setSellCurrency(c => c === 'usd' ? 'bs' : 'usd'); }}
                                         className={`absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-black transition-colors ${sellCurrency === 'usd'
-                                                ? 'bg-brand/20 text-brand-dark dark:text-brand'
-                                                : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                            ? 'bg-brand/20 text-brand-dark dark:text-brand'
+                                            : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                                             }`}
                                     >
                                         {sellCurrency === 'usd' ? 'USD' : 'Bs'}
