@@ -70,7 +70,8 @@ export default function BodegaView({ rates, triggerHaptic }) {
     const [unitsPerBox, setUnitsPerBox] = useState('');
     const [pricingMode, setPricingMode] = useState('margin'); // 'margin' | 'custom'
     const [marginPercent, setMarginPercent] = useState('');
-    const [customSellPrice, setCustomSellPrice] = useState('');
+    const [customSellPrice, setCustomSellPrice] = useState('');  // precio unidad
+    const [customBoxPrice, setCustomBoxPrice] = useState('');    // precio caja
     const [sellCurrency, setSellCurrency] = useState('usd'); // 'usd' | 'bs'
     const [image, setImage] = useState(null);
     const fileInputRef = useRef(null);
@@ -113,9 +114,17 @@ export default function BodegaView({ rates, triggerHaptic }) {
             const margin = (product.marginPercent || 0) / 100;
             sellUsd = costPerUnit * (1 + margin);
         }
+        // Precio de caja: independiente o calculado
+        let sellBoxUsd;
+        if (product.pricingMode === 'custom' && product.customBoxPrice > 0) {
+            sellBoxUsd = product.customBoxPrice;
+        } else {
+            sellBoxUsd = sellUsd * units;
+        }
         const sellBs = sellUsd * effectiveRate;
         const sellBsRounded = smartRound(sellBs, roundMode);
-        return { costPerUnit, sellUsd, sellBs: sellBsRounded };
+        const sellBoxBs = smartRound(sellBoxUsd * effectiveRate, roundMode);
+        return { costPerUnit, sellUsd, sellBs: sellBsRounded, sellBoxUsd, sellBoxBs };
     };
 
     // ═══════════════════════════════════════════════════════════════
@@ -167,14 +176,11 @@ export default function BodegaView({ rates, triggerHaptic }) {
         if (!name || !costBox) return;
 
         const formatted = name.replace(/(^\w{1})|(\s+\w{1})/g, l => l.toUpperCase());
+        const toUsd = (val) => sellCurrency === 'bs' && effectiveRate > 0 ? val / effectiveRate : val;
 
         // Convertir costo a USD si está en Bs
         const rawCost = parseFloat(costBox) || 0;
         const costInUsd = costCurrency === 'bs' && effectiveRate > 0 ? rawCost / effectiveRate : rawCost;
-
-        // Convertir precio de venta a USD si está en Bs
-        const rawSell = parseFloat(customSellPrice) || 0;
-        const sellInUsd = sellCurrency === 'bs' && effectiveRate > 0 ? rawSell / effectiveRate : rawSell;
 
         const data = {
             name: formatted,
@@ -182,7 +188,8 @@ export default function BodegaView({ rates, triggerHaptic }) {
             unitsPerBox: parseInt(unitsPerBox) || 1,
             pricingMode,
             marginPercent: pricingMode === 'margin' ? (parseFloat(marginPercent) || 0) : 0,
-            customSellPrice: pricingMode === 'custom' ? sellInUsd : 0,
+            customSellPrice: pricingMode === 'custom' ? toUsd(parseFloat(customSellPrice) || 0) : 0,
+            customBoxPrice: pricingMode === 'custom' ? toUsd(parseFloat(customBoxPrice) || 0) : 0,
             image,
         };
 
@@ -202,6 +209,7 @@ export default function BodegaView({ rates, triggerHaptic }) {
         setUnitsPerBox(product.unitsPerBox?.toString() || '1');
         setPricingMode(product.pricingMode || 'margin');
         setMarginPercent(product.marginPercent?.toString() || '0');
+        setCustomBoxPrice(product.customBoxPrice?.toString() || '');
         setCustomSellPrice(product.customSellPrice?.toString() || '');
         setImage(product.image);
         setIsModalOpen(true);
@@ -217,7 +225,7 @@ export default function BodegaView({ rates, triggerHaptic }) {
 
     const handleCloseModal = () => {
         setName(''); setCostBox(''); setUnitsPerBox(''); setMarginPercent('');
-        setCustomSellPrice(''); setPricingMode('margin');
+        setCustomSellPrice(''); setCustomBoxPrice(''); setPricingMode('margin');
         setCostCurrency('usd'); setSellCurrency('usd');
         setImage(null); setEditingId(null); setIsModalOpen(false);
     };
@@ -231,23 +239,32 @@ export default function BodegaView({ rates, triggerHaptic }) {
         const units = parseInt(unitsPerBox) || 1;
         if (rawCost <= 0) return null;
 
-        // Convertir a USD si el input está en Bs
+        const toUsd = (val) => sellCurrency === 'bs' && effectiveRate > 0 ? val / effectiveRate : val;
         const costUsd = costCurrency === 'bs' && effectiveRate > 0 ? rawCost / effectiveRate : rawCost;
         const perUnit = costUsd / units;
 
         let sell;
         if (pricingMode === 'custom' && parseFloat(customSellPrice) > 0) {
-            const rawSell = parseFloat(customSellPrice);
-            sell = sellCurrency === 'bs' && effectiveRate > 0 ? rawSell / effectiveRate : rawSell;
+            sell = toUsd(parseFloat(customSellPrice));
         } else {
             const margin = parseFloat(marginPercent) || 0;
             sell = perUnit * (1 + margin / 100);
         }
+
+        // Precio caja independiente
+        let sellBox;
+        if (pricingMode === 'custom' && parseFloat(customBoxPrice) > 0) {
+            sellBox = toUsd(parseFloat(customBoxPrice));
+        } else {
+            sellBox = sell * units;
+        }
+
         const sellBs = smartRound(sell * effectiveRate, roundMode);
+        const sellBoxBs = smartRound(sellBox * effectiveRate, roundMode);
         const profitUsd = sell - perUnit;
         const profitPercent = perUnit > 0 ? ((sell / perUnit) - 1) * 100 : 0;
-        return { perUnit, sell, sellBs, profitUsd, profitPercent };
-    }, [costBox, costCurrency, unitsPerBox, marginPercent, customSellPrice, sellCurrency, pricingMode, effectiveRate, roundMode]);
+        return { perUnit, sell, sellBs, sellBox, sellBoxBs, profitUsd, profitPercent, units };
+    }, [costBox, costCurrency, unitsPerBox, marginPercent, customSellPrice, customBoxPrice, sellCurrency, pricingMode, effectiveRate, roundMode]);
 
     // Tasa base antes de ajuste (para preview)
     const baseRate = useAutoRate
@@ -409,7 +426,7 @@ export default function BodegaView({ rates, triggerHaptic }) {
                 <>
                     <div className="flex-1 overflow-y-auto pb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 scrollbar-hide content-start items-start">
                         {paginatedProducts.map(p => {
-                            const { costPerUnit, sellUsd, sellBs } = calcPrices(p);
+                            const { costPerUnit, sellUsd, sellBs, sellBoxUsd, sellBoxBs } = calcPrices(p);
                             return (
                                 <div key={p.id} className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 group relative">
                                     {/* Imagen */}
@@ -458,8 +475,8 @@ export default function BodegaView({ rates, triggerHaptic }) {
                                             <div className="bg-slate-50 dark:bg-slate-800/50 px-2 py-1.5 rounded-lg space-y-0.5 border border-slate-100 dark:border-slate-700/50">
                                                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Caja × {p.unitsPerBox}</p>
                                                 <div className="flex items-baseline justify-between">
-                                                    <span className="text-sm font-black text-brand-dark dark:text-brand">${fmtUsd(sellUsd * p.unitsPerBox)}</span>
-                                                    <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">{fmtBs(sellBs * p.unitsPerBox)} Bs</span>
+                                                    <span className="text-sm font-black text-brand-dark dark:text-brand">${fmtUsd(sellBoxUsd)}</span>
+                                                    <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-400">{fmtBs(sellBoxBs)} Bs</span>
                                                 </div>
                                             </div>
                                         )}
@@ -598,29 +615,59 @@ export default function BodegaView({ rates, triggerHaptic }) {
                                 />
                             </div>
                         ) : (
-                            <div>
-                                <label className="text-[10px] font-bold text-slate-400 ml-1 mb-1 block uppercase flex items-center gap-1">
-                                    <DollarSign size={10} /> Precio de Venta
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type="number"
-                                        value={customSellPrice}
-                                        onChange={e => setCustomSellPrice(e.target.value)}
-                                        placeholder={sellCurrency === 'bs' ? '600' : '1.50'}
-                                        className="w-full bg-slate-50 dark:bg-slate-800 p-3.5 pr-14 rounded-xl font-bold text-sm text-emerald-600 dark:text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500/50"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => { triggerHaptic?.(); setSellCurrency(c => c === 'usd' ? 'bs' : 'usd'); }}
-                                        className={`absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-black transition-colors ${sellCurrency === 'usd'
-                                            ? 'bg-brand/20 text-brand-dark dark:text-brand'
-                                            : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                                            }`}
-                                    >
-                                        {sellCurrency === 'usd' ? 'USD' : 'Bs'}
-                                    </button>
+                            <div className="space-y-3">
+                                {/* Precio por Unidad */}
+                                <div>
+                                    <label className="text-[10px] font-bold text-slate-400 ml-1 mb-1 block uppercase flex items-center gap-1">
+                                        <DollarSign size={10} /> Precio Unidad
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type="number"
+                                            value={customSellPrice}
+                                            onChange={e => setCustomSellPrice(e.target.value)}
+                                            placeholder={sellCurrency === 'bs' ? '600' : '1.50'}
+                                            className="w-full bg-slate-50 dark:bg-slate-800 p-3.5 pr-14 rounded-xl font-bold text-sm text-emerald-600 dark:text-emerald-400 outline-none focus:ring-2 focus:ring-emerald-500/50"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => { triggerHaptic?.(); setSellCurrency(c => c === 'usd' ? 'bs' : 'usd'); }}
+                                            className={`absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-black transition-colors ${sellCurrency === 'usd'
+                                                ? 'bg-brand/20 text-brand-dark dark:text-brand'
+                                                : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                                }`}
+                                        >
+                                            {sellCurrency === 'usd' ? 'USD' : 'Bs'}
+                                        </button>
+                                    </div>
                                 </div>
+
+                                {/* Precio por Caja (solo cuando hay más de 1 unidad) */}
+                                {(parseInt(unitsPerBox) || 1) > 1 && (
+                                    <div>
+                                        <label className="text-[10px] font-bold text-slate-400 ml-1 mb-1 block uppercase flex items-center gap-1">
+                                            <Box size={10} /> Precio Caja ({unitsPerBox} uds)
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                value={customBoxPrice}
+                                                onChange={e => setCustomBoxPrice(e.target.value)}
+                                                placeholder={sellCurrency === 'bs'
+                                                    ? fmtBs((parseFloat(customSellPrice) || 0) * (parseInt(unitsPerBox) || 1))
+                                                    : fmtUsd((parseFloat(customSellPrice) || 0) * (parseInt(unitsPerBox) || 1))}
+                                                className="w-full bg-slate-50 dark:bg-slate-800 p-3.5 pr-14 rounded-xl font-bold text-sm text-blue-600 dark:text-blue-400 outline-none focus:ring-2 focus:ring-blue-500/50"
+                                            />
+                                            <span className={`absolute right-1.5 top-1/2 -translate-y-1/2 px-2 py-1 rounded-lg text-[10px] font-black ${sellCurrency === 'usd'
+                                                ? 'bg-brand/20 text-brand-dark dark:text-brand'
+                                                : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                                }`}>
+                                                {sellCurrency === 'usd' ? 'USD' : 'Bs'}
+                                            </span>
+                                        </div>
+                                        <p className="text-[9px] text-slate-400 ml-1 mt-0.5">Vacío = unidad × {unitsPerBox}</p>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -650,13 +697,21 @@ export default function BodegaView({ rates, triggerHaptic }) {
                             )}
 
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-slate-500 font-medium">Venta USD:</span>
-                                <span className="font-black text-brand-dark dark:text-brand text-base">${fmtUsd(livePreview.sell)}</span>
+                                <span className="text-slate-500 font-medium">Venta Unidad:</span>
+                                <div className="text-right">
+                                    <span className="font-black text-brand-dark dark:text-brand text-base">${fmtUsd(livePreview.sell)}</span>
+                                    <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 ml-2">{fmtBs(livePreview.sellBs)} Bs</span>
+                                </div>
                             </div>
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-slate-500 font-medium">Venta Bs:</span>
-                                <span className="font-black text-emerald-700 dark:text-emerald-400 text-base">{fmtBs(livePreview.sellBs)} Bs</span>
-                            </div>
+                            {livePreview.units > 1 && (
+                                <div className="flex justify-between items-center text-sm">
+                                    <span className="text-slate-500 font-medium">Venta Caja:</span>
+                                    <div className="text-right">
+                                        <span className="font-black text-blue-600 dark:text-blue-400 text-base">${fmtUsd(livePreview.sellBox)}</span>
+                                        <span className="text-xs font-black text-emerald-700 dark:text-emerald-400 ml-2">{fmtBs(livePreview.sellBoxBs)} Bs</span>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="h-px bg-slate-200 dark:bg-slate-700" />
 
@@ -672,12 +727,13 @@ export default function BodegaView({ rates, triggerHaptic }) {
                         {editingId ? "Actualizar" : "Guardar Producto"}
                     </button>
                 </div>
-            </Modal>
+            </Modal >
 
             {/* ═══════════════════════════════════════════════════════════
                MODAL: ELIMINAR
             ═══════════════════════════════════════════════════════════ */}
-            <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Eliminar Producto">
+            < Modal isOpen={!!deleteId
+            } onClose={() => setDeleteId(null)} title="Eliminar Producto" >
                 <div className="flex flex-col items-center text-center space-y-4 py-4">
                     <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center">
                         <Trash2 size={28} className="text-red-500" />
@@ -695,10 +751,10 @@ export default function BodegaView({ rates, triggerHaptic }) {
                         </button>
                     </div>
                 </div>
-            </Modal>
+            </Modal >
 
             {/* Settings Modal */}
-            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-        </div>
+            < SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+        </div >
     );
 }
